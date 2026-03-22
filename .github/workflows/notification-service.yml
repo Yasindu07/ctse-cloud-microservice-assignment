@@ -1,0 +1,30 @@
+name: Notification Service CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - backend/notification-service/**
+      - .github/workflows/notification-service.yml
+      - .github/workflows/reusable-java-service-ci.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - backend/notification-service/**
+      - .github/workflows/notification-service.yml
+      - .github/workflows/reusable-java-service-ci.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/reusable-java-service-ci.yml
+    with:
+      service_name: notification-service
+      service_path: backend/notification-service
+      image_name: gocart-notification-service
+    secrets: inherit
