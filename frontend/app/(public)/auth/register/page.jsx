@@ -20,6 +20,7 @@ const Register = () => {
         e.preventDefault()
         const result = await dispatch(registerUser({ name, email, password }))
         if (!result.error) {
+            router.push('/')
         }
     }
 
