@@ -3,12 +3,14 @@ import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
-import { getProductsByStoreId, toggleProductStock } from "@/lib/api/productApi"
+import { getProductsByStoreId, toggleProductStock, deleteProduct } from "@/lib/api/productApi"
 import { getMyStore } from "@/lib/api/storeApi"
 import { assets } from "@/assets/assets"
+import { useRouter } from "next/navigation"
 
 export default function StoreManageProducts() {
 
+    const router = useRouter()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
 
     const [loading, setLoading] = useState(true)
@@ -49,6 +51,18 @@ export default function StoreManageProducts() {
 
     }
 
+    const handleDelete = async (productId) => {
+        if (!confirm("Are you sure you want to delete this product?")) return;
+        try {
+            await deleteProduct(productId);
+            setProducts((prev) => prev.filter((item) => item.id !== productId));
+            toast.success("Product deleted successfully");
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.response?.data || 'Failed to delete product';
+            toast.error(typeof message === 'string' ? message : 'Failed to delete product');
+        }
+    }
+
     useEffect(() => {
             fetchProducts()
     }, [])
@@ -81,11 +95,19 @@ export default function StoreManageProducts() {
                             <td className="px-4 py-3 hidden md:table-cell">{currency} {product.mrp.toLocaleString()}</td>
                             <td className="px-4 py-3">{currency} {product.price.toLocaleString()}</td>
                             <td className="px-4 py-3 text-center">
-                                <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3">
-                                    <input type="checkbox" className="sr-only peer" onChange={() => toast.promise(toggleStock(product.id), { loading: "Updating data..." })} checked={product.inStock} />
-                                    <div className="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
-                                    <span className="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4"></span>
-                                </label>
+                                <div className="flex items-center justify-center gap-4">
+                                    <label className="relative inline-flex items-center cursor-pointer text-gray-900 gap-3" title="Toggle Stock">
+                                        <input type="checkbox" className="sr-only peer" onChange={() => toast.promise(toggleStock(product.id), { loading: "Updating data..." })} checked={product.inStock} />
+                                        <div className="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-600 transition-colors duration-200"></div>
+                                        <span className="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4"></span>
+                                    </label>
+                                    <button onClick={() => router.push(`/store/edit-product/${product.id}`)} className="text-blue-500 hover:text-blue-700 font-medium" title="Edit">
+                                        Edit
+                                    </button>
+                                    <button onClick={() => handleDelete(product.id)} className="text-red-500 hover:text-red-700 font-medium" title="Delete">
+                                        Delete
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
