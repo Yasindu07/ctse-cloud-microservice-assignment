@@ -77,4 +77,4 @@ Frontend default URL:
 
 ## Notes
 
-This repository appears to be prepared for academic cloud-computing coursework and demo workflows, while also being structured like a production-style e-commerce system.
+This repository appears to be prepared for academic cloud-computing coursework and demo workflows, while also being structured like a production-style e-commerce system
