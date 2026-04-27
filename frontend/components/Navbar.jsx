@@ -60,7 +60,7 @@ const Navbar = () => {
                         <Link href="/shop" className="hover:text-green-600 transition">Shop</Link>
                         {/* <Link href="/" className="hover:text-green-600 transition">About</Link> */}
                         {isAuthenticated && (
-                            <Link href="/orders" className="hover:text-green-600 transition">Orders</Link>
+                            <Link href="/orders" className="hover:text-green-600 transition">Ordersss</Link>
                         )}
                         {isAuthenticated && (
                             <Link href="/following" className="hover:text-green-600 transition">Following</Link>
