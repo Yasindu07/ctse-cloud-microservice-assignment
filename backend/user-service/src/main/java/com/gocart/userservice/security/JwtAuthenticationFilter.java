@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -39,17 +41,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.debug("No Bearer token found in Authorization header");
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
             jwt = authHeader.substring(7);
+            log.debug("Attempting to extract username from JWT token");
             userEmail = jwtService.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                log.debug("Loading user details for email: {}", userEmail);
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    log.info("Token validated successfully for user: {}", userEmail);
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -57,9 +63,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    log.warn("Token validation failed for user: {}", userEmail);
+                    SecurityContextHolder.clearContext();
                 }
+            } else if (userEmail == null) {
+                log.warn("Could not extract username from token");
+                SecurityContextHolder.clearContext();
             }
         } catch (Exception ex) {
+            log.error("Error processing JWT token: {}", ex.getMessage(), ex);
             SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
